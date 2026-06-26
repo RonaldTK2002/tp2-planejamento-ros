@@ -13,6 +13,7 @@ import matplotlib.pyplot as plt
 from geometry_msgs.msg import Twist, PoseStamped
 from nav_msgs.msg import OccupancyGrid, Odometry
 from visualization_msgs.msg import Marker
+from scipy.ndimage import binary_dilation
 from tf.transformations import euler_from_quaternion
 
 class RRTNode:
@@ -77,20 +78,20 @@ class TurtlebotRRTNav:
         raw_data = np.array(msg.data)
         self.raw_grid_2d = raw_data.reshape((self.height, self.width))
         
-        # Aplicamos uma inflação básica (como no Ex 1) para o RRT não colidir nas quinas
-        # Obstáculos e áreas desconhecidas viram 1
+        # Binarização inicial (Obstáculos e áreas desconhecidas viram True/1)
         obstacle_mask = (self.raw_grid_2d == 100) | (self.raw_grid_2d == -1)
         
-        # Inflação rápida via deslocamento NumPy (Raio de 4 células)
-        inflated_mask = np.copy(obstacle_mask)
-        radius = 4
-        for dr in range(-radius, radius + 1):
-            for dc in range(-radius, radius + 1):
-                if dr**2 + dc**2 <= radius**2:
-                    inflated_mask |= np.roll(obstacle_mask, shift=(dr, dc), axis=(0, 1))
-                    
+        # Inflação de segurança idêntica à do A* via SciPy (Raio de 5 células)
+        radius = 5
+        y, x = np.ogrid[-radius:radius+1, -radius:radius+1]
+        circular_mask = x**2 + y**2 <= radius**2
+        
+        rospy.loginfo("Inflando obstáculos do RRT via SciPy binary_dilation...")
+        inflated_mask = binary_dilation(obstacle_mask, structure=circular_mask)
+        
+        # Salva como array do NumPy (0 livre, 1 obstáculo) para manter compatibilidade com o check_collision
         self.grid = np.where(inflated_mask, 1, 0)
-        rospy.loginfo(f"Grid do RRT inicializado: {self.width}x{self.height}")
+        rospy.loginfo(f"Grid do RRT inicializado com C-Space do SciPy: {self.width}x{self.height}")
 
     def odom_callback(self, msg):
         self.pose_x = msg.pose.pose.position.x

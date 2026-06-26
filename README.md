@@ -45,6 +45,7 @@ sudo apt install ros-noetic-turtlebot3 ros-noetic-turtlebot3-simulations ros-noe
 Navegue até a raiz do seu workspace catkin e execute a compilação:
 
 ```bash
+source /opt/ros/noetic/setup.bash
 catkin_make
 source devel/setup.bash
 ```

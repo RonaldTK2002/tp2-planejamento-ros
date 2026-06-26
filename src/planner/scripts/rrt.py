@@ -5,7 +5,6 @@ import numpy as np
 import os
 import random
 
-# Configura o matplotlib para modo "headless" antes de importar o pyplot
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt

@@ -51,8 +51,6 @@ class TurtlebotVoronoiNav:
         self.goal_real_y = None
         self.new_goal_received = False
 
-        # Configuração do caminho de saída do PNG
-        # TODO: Altere esta pasta se quiser salvar em outro lugar
         self.pasta_projeto = "/home/user/project"
         self.nome_arquivo_png = "resultado_brushfire_ros.png"
 
@@ -91,7 +89,6 @@ class TurtlebotVoronoiNav:
     def compute_brushfire_and_voronoi(self, grid_2d):
             rospy.loginfo("Iniciando Algoritmo Brushfire no nó...")
             
-            # 1. COMPUTAÇÃO DO BRUSHFIRE (MAPA DE DISTÂNCIAS)
             self.distance_map = np.full((self.height, self.width), np.inf)
             queue = deque()
             
@@ -116,7 +113,6 @@ class TurtlebotVoronoiNav:
                             
             rospy.loginfo("Brushfire concluído! Extraindo esqueleto fino de Voronoi...")
             
-            # 2. EXTRAÇÃO DE CRISTAS FINAS (MÁXIMOS LOCAIS ESTRITOS)
             self.voronoi_grid = np.zeros((self.height, self.width), dtype=int)
             min_clearance = 5  # Aumentado levemente para afastar mais das quinas
             
@@ -132,10 +128,7 @@ class TurtlebotVoronoiNav:
                     v_baixo = self.distance_map[r-1, c]
                     v_dir   = self.distance_map[r, c+1]
                     v_esq   = self.distance_map[r, c-1]
-                    
-                    # Para ser uma crista central real, a célula deve ser um máximo local estrito 
-                    # em pelo menos uma das direções (vertical ou horizontal), sem margem de tolerância.
-                    # Isso impede que o centro plano de salas grandes seja todo preenchido.
+
                     is_max_vertical   = (val > v_cima and val >= v_baixo) or (val >= v_cima and val > v_baixo)
                     is_max_horizontal = (val > v_dir and val >= v_esq) or (val >= v_dir and val > v_esq)
                     
